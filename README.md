@@ -10,8 +10,8 @@ rake-compiler + Vagrant = easy native gems for all.
 
 ## Dependencies
 
-* [VirtualBox](https://www.virtualbox.org)
 * [Vagrant](http://www.vagrantup.com)
+* A supported [Vagrant provider](https://docs.vagrantup.com/v2/providers/index.html) — [VirtualBox](https://docs.vagrantup.com/v2/virtualbox/index.html), [Hyper-V](https://docs.vagrantup.com/v2/hyperv/index.html), and [VMware Fusion](https://docs.vagrantup.com/v2/vmware/index.html) should all work.
 
 ## How to Build the Virtual Machine
 
@@ -43,19 +43,19 @@ And SSH in:
 
 You'll now be inside the virtual machine.  The directory on your host machine with your gem in it and the scripts to build it will be mounted at `/vagrant`:
 
-    vagrant@precise32:~$ cd /vagrant
-    vagrant@precise32:/vagrant$ ls
+    vagrant@precise64:~$ cd /vagrant
+    vagrant@precise64:/vagrant$ ls
     bcrypt-ruby  bin  bootstrap.sh  LICENSE.txt  README.md  sample_gem  Vagrantfile
 
 To build all gem binaries (native, Java, and Windows versions), run:
 
-    vagrant@precise32:/vagrant$ package_all YOUR_GEM'S_DIR_NAME
+    vagrant@precise64:/vagrant$ package_all YOUR_GEM'S_DIR_NAME
 
 And wait for everything to build.  Replace `YOUR_GEM'S_DIR_NAME` with the correct value -- above, it would be `bcrypt-ruby`. There's a `sample_gem` dir in there as well if you'd like to experiment.
 
 All of your gem binaries will be put into `pkg`:
 
-    vagrant@precise32:/vagrant$ ls bcrypt-ruby/pkg/
+    vagrant@precise64:/vagrant$ ls bcrypt-ruby/pkg/
     bcrypt-ruby-3.1.0            bcrypt-ruby-3.1.0-x86-linux.gem
     bcrypt-ruby-3.1.0.gem        bcrypt-ruby-3.1.0-x86-mingw32
     bcrypt-ruby-3.1.0-java       bcrypt-ruby-3.1.0-x86-mingw32.gem
@@ -63,6 +63,30 @@ All of your gem binaries will be put into `pkg`:
     bcrypt-ruby-3.1.0-x86-linux  bcrypt-ruby-3.1.0-x86-mswin32-60.gem
 
 Happy compiling!
+
+### Limiting Target Rubies
+
+Some gems might choose not to support older versions of Ruby (like [Nokogiri](http://nokogiri.org), which no longer supports 1.8).
+
+If you wish to limit the versions of Ruby that your cross-compiled Windows binaries supports, you can use the environment variables `BASE_VERSION` and `RUBY_CC_VERSION`:
+
+* `BASE_VERSION`: the native version of Ruby that will be used as a base for cross-compilation
+
+* `RUBY_CC_VERSION`: a colon-separated list of target versions for cross-compilation
+
+_Note: If you wish to target 1.8.x, your base version must be 1.8.x -- versions 1.9+ cannot cross-build 1.8._
+
+#### Examples:
+
+Use Ruby 1.9.3 to cross-compile a fat binary that includes 1.9 and 2.0 binaries:
+
+    vagrant@precise64:/vagrant$ BASE_VERSION=1.9.3 RUBY_CC_VERSION=1.9.3:2.0.0 package_all nokogiri
+
+Use Ruby 2.0.0 to cross-compile a fat binary that includes 2.0 and 2.1 binaries:
+
+    vagrant@precise64:/vagrant$ BASE_VERSION=2.0.0 RUBY_CC_VERSION=2.0.0:2.1.3 package_all nokogiri
+
+By default, with no environment variables, rake-compiler-dev-box will try to cross-compile for all available versions, using 1.8 as a base.
 
 ## VM Management
 
